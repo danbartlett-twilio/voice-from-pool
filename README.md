@@ -50,9 +50,9 @@ Paste the url that ends with "/create-studio-flow.html" and was copied in the st
 * Click on the **Deploy Flow** button to deploy the Studio Flow.
 * Copy value in the the **STUDIO_FLOW** variable once it populates.
 
-**A quick side note on what you just did...**  When you clicked **Update** you saved an Environment Variable the Twilio Functions Service you just deployed. When you clicked on **Deploy Flow**, you called a Function that opened up a json file that contained the description of the Studio Flow, and then created the flow in your Twilio Account. All of these Functions and assets are in this repo for you to check out, but the result was getting a flow deployed quickly to your account!
+**A quick side note on what you just did...**  When you clicked **Update** you saved an environment variable to the Twilio Functions Service you just deployed. When you clicked on **Deploy Flow**, you called a Function that opened up a json file that contained the description of the Studio Flow, and then created the flow in your Twilio Account. All of these Functions and assets are in this repo for you to check out but they are secondary to the purpose of this blog. The result is getting a Studio Flow deployed quickly to your account!
 
-You can go to your Twilio Console and go to **Studio** and you will see a new flow title "Voice 2FA Demo Flow" (or whatever you entered for that variable). You can click into that flow to see how you could build a Studio Flow to deliver a 2FA code via voice. In Studio, the flow looks like this:
+You can go to your Twilio Console and go to **Studio** and you will see a new flow titled "Voice 2FA Demo Flow" (or whatever you entered for that variable). You can click into that flow to see how you could build a Studio Flow to deliver a 2FA code via voice. In Studio, the flow looks like this:
 
 ![Studio Flow](https://user-images.githubusercontent.com/78064764/147797582-fd432909-cdc8-4f52-b57f-b88dd80802c5.png)
 
