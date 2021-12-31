@@ -1,0 +1,238 @@
+<html>
+<head>
+  <title>Setup Voice 2FA Studio Flow</title> 
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   
+   <!-- CDN LINKS FOR BOOTSTRAP --> 
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">      
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>      
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+
+  <!-- CDN LIBRARIES REQUIRED FOR VUEJS SPA -->  
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+  <link rel="shortcut icon" href="https://www.twilio.com/docs/static/img/favicons/favicon.a3315adc0.ico"/>
+</head>
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0">
+    <!-- APP CONTAINER -->  
+    <div id="app" class="container">
+      <router-view name="header-top"></router-view>  
+      <router-view></router-view>
+    </div>
+  </main>
+
+<footer class="footer mt-auto py-3 bg-light">
+  <div class="container text-center">
+    <img class="" width="107" height="32" src="https://www.twilio.com/docs/static/dist/img/559bc7cf.svg"/>    
+  </div>
+</footer>
+
+<!-- JAVASCRIPT FOR VUEJS SPA --> 
+<script>
+
+// HEADER COMPONTENT: Main Navigation
+const Header = {
+  template: `
+  <div class="container">
+    <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+      <a href="/create-studio-flow.html" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">                
+        <span class="fs-4">Setup Voice 2FA Studio Flow</span>
+      </a>
+    </header>
+  </div>
+  `
+};
+
+// SETTING COMPONENT: Display a single setting (environment variable)
+// with methods to update.
+const Setting = {
+  name: 'Setting',
+  props: ['setting'],
+  data: function () {
+    return {
+      notSet: (this.setting.notSet) ? true: false,
+    }  
+  },  
+  template: `
+    <div class="mb-3" v-show="setting.show">
+      <label :for="setting.key" class="form-label">
+        {{setting.key}}        
+      </label>
+        <div class="input-group" v-if="setting.key!='STUDIO_FLOW'">
+            <input type="text" v-model="setting.value" class="form-control" :class="{'is-invalid':notSet,'is-valid':!notSet}" :id="setting.key">
+            <button class="btn" :class="{'btn-danger':notSet,'btn-light':!notSet}" type="button" :id="'button-'+setting.key" @click="updateVariable(setting)">Update</button>
+        </div>
+        <input v-if="setting.key=='STUDIO_FLOW'" class="form-control" type="text" v-model="setting.value" :placeholder="setting.value" aria-label="Disabled input" disabled readonly>            
+    </div>       
+  `,
+  methods: {
+    async updateVariable(v) {
+      let vm = this;
+      await axios.post("/utilities/update-variable", {'TARGET_KEY':v.key, 'NEW_VALUE':v.value})
+        .then((response) => {
+          console.log("response ==> ", response);
+          //this.updateMessage = response.data;
+          //this.variableUpdated = true;
+        }).catch((error) => {          
+          console.log(error);
+        }).finally(() => {            
+          if (v.value !== "<NOT SET>") {            
+            vm.notSet = false
+          }
+        });
+    }      
+  }
+};
+
+// SETTING COMPONENT: Display tabs of all settings
+const Settings = { 
+  components: {
+    Setting: Setting
+  },
+  data() {
+  return {
+    ns: "<NOT SET>",
+    loading: true,
+    deploying: false,
+    envVariables: null,
+    variableUpdated: false ,
+    updateMessage: null,
+    errorUpdate: false ,
+    errorMessage: null,
+    dataVariables: [],      
+    flowDeployed:false,
+  }
+},  
+template: `<div>
+
+  <h4>Welcome</h4>
+
+    <p class="lead">
+        Use this simple application to name and deploy the Studio Flow for this demo.
+    </p>
+
+  <h4 class="mb-5"><i class="bi-gear"></i> Environment Variables and Studio Flow</h4>
+  
+  <div v-show="variableUpdated" class="alert alert-success">{{updateMessage}}</div>
+  <div v-show="errorUpdate" class="alert alert-danger">{{errorMessage}}</div>
+
+  <div v-show="loading" class="spinner-border" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>    
+  <div v-show="!loading" >      
+    
+      <div class="container">
+
+        <form>
+          <Setting v-for="v in dataVariables" :key="v.key" :setting="v"></Setting>
+        </form>
+
+        <div class="card" v-if="!flowDeployed">
+          <div class="card-body">
+            <p class="lead">
+              If you have set the STUDIO_FLOW_FRIENDLY_NAME variable, you
+              can deploy the Studio Flow by clicking below.  (click once and be patient!)
+              The STUDIO_FLOW variable will be populated automatically with the Flow SID 
+              once the Studio Flow has deployed.
+            </p>
+            <div v-if="deploying" class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <button v-if="!deploying" class="btn" :class="{'btn-success':flowDeployed,'btn-danger':!flowDeployed}" @click="deployStudioFlow">Deploy Flow</button>
+          </div>
+        </div>
+
+      </div>      
+     
+    </div>
+
+  </div>
+    
+</div>`,
+methods: {
+      
+  async getEnvVariables() {
+    let vm = this;
+
+    await axios.get('/utilities/return-all-variables')
+      .then((response) => {
+        console.log("response ==> ", response);
+        this.envVariables = response.data;          
+
+        let pf = response.data.find( obj => {return obj.key === 'STUDIO_FLOW'});        
+
+        this.envVariables.forEach(
+          function(v) {
+            v.show = true;
+            v.notSet = v.value === vm.ns ? true : false;
+            let i = vm.dataVariables.findIndex( obj => {return obj.key === v.key});
+            if(i>-1) {
+              vm.dataVariables[i] = v;
+            } else {
+              vm.dataVariables.push(v);
+            }                 
+          }
+        );
+
+      }).catch((error) => {          
+        console.log(error);
+      }).finally(() => {
+        vm.flowDeployed = (vm.envVariables.find( obj => {return obj.key === 'STUDIO_FLOW'}).value === '<NOT SET>') ? false : true;
+        vm.loading = false;          
+      })      
+  },
+
+    async deployStudioFlow() {
+      let vm = this;
+      
+      vm.deploying = true;
+
+      await vm.getEnvVariables();            
+      
+      await axios.get('/utilities/deploy-studio-flow')
+        .then((response) => {
+            console.log("response ==> ", response);          
+        }).catch((error) => {          
+            console.log(error);
+        }).finally(() => {
+            setTimeout( function() { vm.getEnvVariables();vm.deploying = false; },5000);
+            
+      }) 
+
+    }
+
+  },
+  mounted: function() {    
+    this.getEnvVariables();        
+  } 
+
+};  
+
+
+// ROUTES: Different link options for SPA  
+const routes = [
+  { name: 'home', path: '/', components: {default: Settings, "header-top": Header }},
+  { name: 'settings', path: '/settings', components: {default: Settings, "header-top": Header }},
+];
+
+// ROUTER USED TO MANAGE "PAGES" for SPA
+const router = new VueRouter({
+  routes,
+  linkActiveClass: "active",
+  linkExactActiveClass: "exact-active"
+});
+
+// MOUNT THE PRIMARY APP AND LINK TO DOM ELEMENT
+const app = new Vue({
+  router
+}).$mount('#app');
+
+</script>
+</body>
+</html>

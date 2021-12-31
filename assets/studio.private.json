@@ -1,0 +1,340 @@
+{
+    "description": "Sample-Voice-2FA-Flow",
+    "states": [
+      {
+        "name": "Trigger",
+        "type": "trigger",
+        "transitions": [
+          {
+            "event": "incomingMessage"
+          },
+          {
+            "event": "incomingCall"
+          },
+          {
+            "next": "makeOutgoingCall",
+            "event": "incomingRequest"
+          },
+          {
+            "event": "incomingParent"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      {
+        "name": "sayInitialMessage",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "setPromptIndex",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna-Neural",
+          "offset": {
+            "x": -180,
+            "y": 540
+          },
+          "loop": 1,
+          "say": "{{trigger.request.parameters.message}}",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "gatherInput",
+        "type": "gather-input-on-call",
+        "transitions": [
+          {
+            "next": "say_ID",
+            "event": "keypress"
+          },
+          {
+            "event": "speech"
+          },
+          {
+            "next": "incrementPromptIndex",
+            "event": "timeout"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna-Neural",
+          "speech_timeout": "auto",
+          "offset": {
+            "x": 350,
+            "y": 730
+          },
+          "loop": 1,
+          "finish_on_key": "#",
+          "say": "If you are expecting a call Press 1",
+          "language": "en-US",
+          "stop_gather": true,
+          "gather_language": "en",
+          "profanity_filter": "true",
+          "timeout": 3
+        }
+      },
+      {
+        "name": "say_ID",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "SayRepeat",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna-Neural",
+          "offset": {
+            "x": -190,
+            "y": 790
+          },
+          "loop": 2,
+          "say": "Your verification I D is. {{trigger.request.parameters.code}}.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "SayRepeat",
+        "type": "gather-input-on-call",
+        "transitions": [
+          {
+            "next": "say_ID",
+            "event": "keypress"
+          },
+          {
+            "event": "speech"
+          },
+          {
+            "next": "SayComputerScreen",
+            "event": "timeout"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna-Neural",
+          "speech_timeout": "auto",
+          "offset": {
+            "x": 470,
+            "y": 1010
+          },
+          "loop": 1,
+          "finish_on_key": "#",
+          "say": "If you like to hear it again Press 1. Otherwise hangup.",
+          "language": "en-US",
+          "stop_gather": true,
+          "gather_language": "en",
+          "profanity_filter": "true",
+          "timeout": 3
+        }
+      },
+      {
+        "name": "makeOutgoingCall",
+        "type": "make-outgoing-call-v2",
+        "transitions": [
+          {
+            "next": "sayInitialMessage",
+            "event": "answered"
+          },
+          {
+            "event": "busy"
+          },
+          {
+            "event": "noAnswer"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "machine_detection_speech_threshold": "2400",
+          "detect_answering_machine": false,
+          "send_digits": "",
+          "sip_auth_username": "",
+          "offset": {
+            "x": -340,
+            "y": 270
+          },
+          "recording_status_callback": "",
+          "sip_auth_password": "",
+          "recording_channels": "mono",
+          "timeout": 60,
+          "machine_detection": "Enable",
+          "trim": "do-not-trim",
+          "record": false,
+          "machine_detection_speech_end_threshold": "1200",
+          "machine_detection_timeout": "30",
+          "from": "{{flow.channel.address}}",
+          "to": "{{contact.channel.address}}",
+          "machine_detection_silence_timeout": "5000"
+        }
+      },
+      {
+        "name": "setPromptIndex",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "checkPromptCount",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "0",
+              "key": "promptIndex"
+            }
+          ],
+          "offset": {
+            "x": 160,
+            "y": 220
+          }
+        }
+      },
+      {
+        "name": "checkPromptCount",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "gatherInput",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "> 3",
+                "arguments": [
+                  "{{flow.variables.promptIndex}}"
+                ],
+                "type": "less_than",
+                "value": "3"
+              }
+            ]
+          },
+          {
+            "next": "noUserInput",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "== 3",
+                "arguments": [
+                  "{{flow.variables.promptIndex}}"
+                ],
+                "type": "equal_to",
+                "value": "3"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{flow.variables.promptIndex}}",
+          "offset": {
+            "x": 380,
+            "y": 450
+          }
+        }
+      },
+      {
+        "name": "noUserInput",
+        "type": "say-play",
+        "transitions": [
+          {
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna-Neural",
+          "offset": {
+            "x": 860,
+            "y": 330
+          },
+          "loop": 1,
+          "say": "Goodbye",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "incrementPromptIndex",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "checkPromptCount",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{{flow.variables.promptIndex | plus: 1}}",
+              "key": "promptIndex"
+            }
+          ],
+          "offset": {
+            "x": 900,
+            "y": 650
+          }
+        }
+      },
+      {
+        "name": "SayComputerScreen",
+        "type": "gather-input-on-call",
+        "transitions": [
+          {
+            "next": "say_ID",
+            "event": "keypress"
+          },
+          {
+            "event": "speech"
+          },
+          {
+            "next": "finalGoodbye",
+            "event": "timeout"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna-Neural",
+          "speech_timeout": "auto",
+          "offset": {
+            "x": 900,
+            "y": 950
+          },
+          "loop": 1,
+          "finish_on_key": "#",
+          "say": "See your computer screen for more options.",
+          "language": "en-US",
+          "stop_gather": true,
+          "gather_language": "en",
+          "profanity_filter": "true",
+          "timeout": 5
+        }
+      },
+      {
+        "name": "finalGoodbye",
+        "type": "say-play",
+        "transitions": [
+          {
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna-Neural",
+          "offset": {
+            "x": 860,
+            "y": 1240
+          },
+          "loop": 1,
+          "say": "Goodbye",
+          "language": "en-US"
+        }
+      }
+    ],
+    "initial_state": "Trigger",
+    "flags": {
+      "allow_concurrent_calls": true
+    }
+  }
