@@ -4,9 +4,9 @@
 
 ## Overview
 
-For voice solutions within a single country, selecting the "From" number to use is simple. However, many voice solutions need to make calls across the globe, and the optimal customer experience for these outgoing calls requires that the "From" number used for each call is localized.  For globalized voice solutions making outgoing calls, customers must implement a process for selecting FROM numbers based on the specific TO number for each call.
+For voice solutions within a single country, selecting the "From" number to use is simple because there is typically just one phone number. However, many voice solutions need to make calls across the globe, and the optimal customer experience for these outgoing calls is to provide localized "From" numbers.  For globalized voice solutions making outgoing calls, we recommend that customers implement a process for selecting FROM numbers based on the specific TO number for each call.
 
-While you could certainly build a solution internally to select FROM numbers before making API calls to Twilio to initiate outgoing calls, this blog posts outlines a solution to use Twilio Functions to handle FROM number selection on-the-fly. This solution also uses Twilio LookUp to determine the country code for each TO number and also validate the number format.
+While you could certainly build a solution internally to select FROM numbers before making API calls to Twilio to initiate outgoing calls, this blog posts outlines a solution that uses Twilio Functions to handle FROM number selection on-the-fly. This solution also uses Twilio LookUp to determine the country code for each TO number and also validate the TO number format before initiating the outgoing call.
 
 FROM number selection is relevant to any solution that needs to initiate outgoing calls. This blog will walk you through building a voice 2FA solution that can receive API requests, select the best FROM number for the TO number, and then initiate Studio Flows to deliver the 2FA codes via voice.
 
