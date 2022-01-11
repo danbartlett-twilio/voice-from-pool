@@ -4,11 +4,11 @@
 
 ## Overview
 
-Twilio Messaging offers Messaging Services which, among many awesome features, provides a Sender Pool with automatic "From" number selection. This allows our customers to just provide a pool of numbers and allow Twilio to select the best FROM number for each specific SMS recipient. 
+For voice solutions within a single country, selecting the "From" number to use is simple. However, many voice solutions need to make calls across the globe, and the optimal customer experience for these outgoing calls requires that the "From" number used for each call is localized.  For globalized voice solutions making outgoing calls, customers must implement a process for selecting FROM numbers based on the specific TO number for each call.
 
-SMS and Voice are very different channels and Messaging Services do not work with Programmable Voice, so Twilio users need to specify a FROM number when making voice calls. However, using Twilio Functions (and Twilio LookUp API!), it is certainly possible to implement logic for FROM number selection before initiating outgoing calls.
+While you could certainly build a solution internally to select FROM numbers before making API calls to Twilio to initiate outgoing calls, this blog posts outlines a solution to use Twilio Functions to handle FROM number selection on-the-fly. This solution also uses Twilio LookUp to determine the country code for each TO number and also validate the number format.
 
-This blog will walk you through building a voice 2FA solution that can receives API requests, select the best FROM number for the TO number, and then initiate Studio Flows to deliver the 2FA codes via voice.
+FROM number selection is relevant to any solution that needs to initiate outgoing calls. This blog will walk you through building a voice 2FA solution that can receive API requests, select the best FROM number for the TO number, and then initiate Studio Flows to deliver the 2FA codes via voice.
 
 Let's take a quick look at the solution.
 
@@ -36,7 +36,7 @@ Let's take a quick look at the solution.
 * From the repo directory, rename sample.env to .env
 * From the repo directory, enter ```twilio serverless:deploy``` (you may need to ```twilio login``` first!)
 
-The ```twilio serverless:deploy``` command will build a service in your Twilio account and upload some assests. The output of the command will look like this:
+The ```twilio serverless:deploy``` command will build a service in your Twilio account and upload some assets. The output of the command will look like this:
 
 <img width="705" alt="twilio serverless:deploy output" src="https://user-images.githubusercontent.com/78064764/147796672-d3939ba3-b2bd-486e-abce-214cf9db5ad5.png">
 
@@ -48,7 +48,7 @@ Paste the url that ends with "/create-studio-flow.html" and was copied in the st
 
 * Enter a name for the **STUDIO_FLOW_FRIENDLY_NAME**. For example, "Voice 2FA Demo Flow". Click the **Update** button to save the changes.
 * Click on the **Deploy Flow** button to deploy the Studio Flow.
-* Copy value in the the **STUDIO_FLOW** variable once it populates.
+* Copy value in the **STUDIO_FLOW** variable once it populates.
 
 **A quick side note on what you just did...**  When you clicked **Update** you saved an environment variable to the Twilio Functions Service you just deployed. When you clicked on **Deploy Flow**, you called a Function that opened up a json file that contained the description of the Studio Flow, and then created the flow in your Twilio Account. All of these Functions and assets are in this repo for you to check out but they are secondary to the purpose of this blog. The result is getting a Studio Flow deployed quickly to your account!
 
@@ -83,13 +83,13 @@ curl -L -X POST 'http://YOUR-TWILIO-DOMAIN/initiate-outgoing-call' \
 --data-urlencode 'message=Hello, this is a demonstration verification service!' \
 --data-urlencode 'code=513567'
 
-* Replace YOUR-TWILIO-DOMAIN with the Domain your noted when delploying the service
+* Replace YOUR-TWILIO-DOMAIN with the Domain your noted when deploying the service
 * Replace YOUR-E.164-PHONE-NUMBER with your phone number (formatted to E.164)
 * Run the command!
 
-If everything is set up correctly, you should get a phone call from your default phone number to deliver to code you passed in.
+If everything is set up correctly, you should get a phone call from your default phone number to deliver to the code you passed in.
 
-### Great, how do I specify with From number to use?
+### Great, how do I specify which number to use?
 
 The function titled initiate-outgoing-call.js has a helper function called getFromNumber(). This helper function will serve as your pool of numbers. The pool of numbers are divided into two objects:
 
@@ -98,7 +98,7 @@ The function titled initiate-outgoing-call.js has a helper function called getFr
 
 To manage your pool of numbers, you just need to maintain the properties in those two objects. FROM number selection will first try to match for the country code, then fallback to a regional number, and finally your default phone number.
 
-You can use manage this code in your source code repository, and use ```twilio serverless:deploy``` to update your service whenever you add/edit numbers.
+You can manage this code in your source code repository, and use ```twilio serverless:deploy``` to update your service whenever you add/edit numbers.
 
 #### Let's Try it out!
 
@@ -114,7 +114,7 @@ Now, run the same curl command as before, but note that the FROM number should b
 
 ### Further Expansion
 
-This demonstration works for countries and regions. You could certainly get more grainular by parsing the TO number beyond the first two characters (area codes) to localize FROM number selection even further.
+This demonstration works for countries and regions. You could certainly get more granular by parsing the TO number beyond the first two characters (area codes) to localize FROM number selection even further.
 
 Also important to mention that Twilio has a terrific service called Verify, which handles delivering user verification on voice as well as many other channels [Twilio Verify](https://www.twilio.com/verify). If you need to implement or upgrade your 2FA solution, check out Verify!
 
