@@ -77,11 +77,13 @@ With those changes in place, you can now try it out...
 
 Edit this curl command:
 
+```bash
 curl -L -X POST 'http://YOUR-TWILIO-DOMAIN/initiate-outgoing-call' \
 -H 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode 'to=YOUR-E.164-PHONE-NUMBER' \
 --data-urlencode 'message=Hello, this is a demonstration verification service!' \
 --data-urlencode 'code=513567'
+```
 
 * Replace YOUR-TWILIO-DOMAIN with the Domain your noted when deploying the service
 * Replace YOUR-E.164-PHONE-NUMBER with your phone number (formatted to E.164)
